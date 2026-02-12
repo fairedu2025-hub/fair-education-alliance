@@ -491,17 +491,14 @@ const App: React.FC = () => {
         const signInData = await signInWithFirebase(userId, pass);
         const idToken = signInData?.idToken as string | undefined;
         if (idToken && await isUserMarkedDeletedInFirebase(userId, idToken)) {
-          const isMarkerCleared = await clearUserDeletedMarkerInFirebase(userId, idToken);
-          if (!(isMarkerCleared && !(await isUserMarkedDeletedInFirebase(userId, idToken)))) {
-            setFirebaseSession(null);
-            setUserAuthProofs(prev => {
-              const next = { ...prev };
-              delete next[userId];
-              return next;
-            });
-            alert('관리자에 의해 탈퇴 처리된 계정입니다. 로그인할 수 없습니다.');
-            return;
-          }
+          setFirebaseSession(null);
+          setUserAuthProofs(prev => {
+            const next = { ...prev };
+            delete next[userId];
+            return next;
+          });
+          alert('관리자에 의해 탈퇴 처리된 계정입니다. 로그인할 수 없습니다.');
+          return;
         }
 
         setUserAuthProofs(prev => ({ ...prev, [userId]: pass }));
@@ -679,17 +676,23 @@ const App: React.FC = () => {
     }
 
     const idToken = await getIdTokenByUserId(loggedInUser?.id);
-    const authDeleteRes = await fetch('/api/admin/delete-auth-user', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
-      },
-      body: JSON.stringify({ targetUserId: userId }),
-    });
+    let authDeleteData: any = {};
+    let isAuthDeleted = false;
+    try {
+      const authDeleteRes = await fetch('/api/admin/delete-auth-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+        },
+        body: JSON.stringify({ targetUserId: userId }),
+      });
+      authDeleteData = await authDeleteRes.json().catch(() => ({}));
+      isAuthDeleted = authDeleteRes.ok && !!authDeleteData?.ok;
+    } catch (error) {
+      isAuthDeleted = false;
+    }
 
-    const authDeleteData = await authDeleteRes.json().catch(() => ({}));
-    let isAuthDeleted = authDeleteRes.ok && !!authDeleteData?.ok;
     if (!isAuthDeleted) {
       // 폴백: 같은 브라우저에 대상 계정의 로그인 증적 비밀번호가 남아있으면 Auth 직접 탈퇴 시도
       const fallbackPassword = userAuthProofs[userId];
@@ -704,12 +707,25 @@ const App: React.FC = () => {
     }
 
     if (!isAuthDeleted) {
-      alert(authDeleteData?.message || 'Firebase Auth 계정 삭제에 실패했습니다. 서비스 계정 설정을 확인해주세요.');
-      return;
+      try {
+        const alreadyDeleted = await isDeletedFromFirebaseAuth(userId);
+        if (alreadyDeleted) {
+          isAuthDeleted = true;
+        }
+      } catch (error) {
+        // 조회 실패 시에는 아래 마커/프로필 삭제로 최소 동기화를 시도
+      }
     }
 
     const marked = await markUserDeletedByAdminInFirebase(userId, loggedInUser.id, idToken);
     const isProfileDeleted = await deleteUserProfileFromFirebase(userId, idToken);
+
+    if (!isAuthDeleted) {
+      if (!marked && !isProfileDeleted) {
+        alert(authDeleteData?.message || '회원 삭제 처리에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+    }
     setUsers(currentUsers => currentUsers.filter((u) => u.id !== userId));
 
     setUserAuthProofs(prev => {
@@ -718,8 +734,8 @@ const App: React.FC = () => {
       return next;
     });
 
-    if (!marked || !isProfileDeleted) {
-      alert('회원 삭제는 완료되었지만 Firebase 동기화는 일부 실패했습니다.');
+    if (!isAuthDeleted || !marked || !isProfileDeleted) {
+      alert('회원 삭제는 완료되었지만 Firebase 동기화는 일부 실패했습니다. (Auth/프로필/탈퇴마커 중 일부)');
     }
   };
 
