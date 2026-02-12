@@ -322,6 +322,7 @@ const createFirebaseAdminDeletePlugin = (env: Record<string, string>): Plugin =>
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
+      base: '/fair-education-alliance/',
       server: {
         port: 3000,
         host: '0.0.0.0',
