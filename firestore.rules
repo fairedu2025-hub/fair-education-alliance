@@ -12,6 +12,7 @@ service cloud.firestore {
     // 운영 관리자 계정(필요 시 추가/수정)
     function isAdmin() {
       return isSignedIn() && (
+        request.auth.token.email == "admin@myapp.com" ||
         request.auth.token.email == "admin1@myapp.com" ||
         request.auth.token.email == "chusa77@myapp.com"
       );
