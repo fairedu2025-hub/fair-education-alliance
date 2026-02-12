@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>공정교육바른인천연합 - 정직한 교육, 바른 사회</title>
+    
+    <!-- 기본 스타일시트 -->
+    <link rel="stylesheet" href="/style.css" />
+
+    <!-- 통합 글로벌 설정 (테마 및 프레임워크 설정) -->
+    <script src="/script.js"></script>
+    
+    <!-- Tailwind CSS 엔진 (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 모듈 매핑 설정 -->
+    <script type="importmap">
+      {
+        "imports": {
+          "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+          "react/": "https://aistudiocdn.com/react@^19.2.0/",
+          "react": "https://aistudiocdn.com/react@^19.2.0",
+          "@google/genai": "https://aistudiocdn.com/@google/genai@^0.21.0"
+        }
+      }
+    </script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <!-- React 애플리케이션 진입점 -->
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,49 @@
+/* 공정교육바른인천연합 - 커스텀 스타일 */
+
+:root {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* 히어로 섹션 마우스 스크롤 애니메이션 */
+@keyframes scroll-wheel {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+}
+
+.animate-scroll-wheel {
+  animation: scroll-wheel 2s infinite;
+}
+
+/* 브라우저 기본 날짜 입력창 아이콘 숨김 (커스텀 디자인용) */
+.custom-date-input::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+
+/* 스크롤바 디자인 (다크모드 대응) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
