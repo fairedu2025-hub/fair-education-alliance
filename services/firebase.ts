@@ -629,17 +629,34 @@ export const isDeletedFromFirebaseAuth = async (userId: string) => {
 };
 
 export const deleteFirebaseAccount = async (userId: string, password?: string) => {
-  if (!password) return;
+  if (!password) return false;
 
   const signInData = await signInWithFirebase(userId, password);
   const idToken = signInData?.idToken as string | undefined;
-  if (!idToken) return;
+  if (!idToken) {
+    throw new Error('계정 삭제 인증 토큰을 받지 못했습니다.');
+  }
 
-  await fetch(`${AUTH_BASE_URL}/accounts:delete?key=${FIREBASE_API_KEY}`, {
+  const deleteRes = await fetch(`${AUTH_BASE_URL}/accounts:delete?key=${FIREBASE_API_KEY}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ idToken }),
   });
+
+  if (!deleteRes.ok) {
+    const data = await deleteRes.json().catch(() => ({}));
+    const code = data?.error?.message || 'UNKNOWN';
+    throw new FirebaseAuthError(code, parseFirebaseError(code));
+  }
+
+  // 서버 응답 성공만으로 끝내지 않고 실제 삭제 반영 여부까지 확인
+  for (let i = 0; i < 3; i += 1) {
+    const deleted = await isDeletedFromFirebaseAuth(userId);
+    if (deleted) return true;
+    await new Promise((resolve) => setTimeout(resolve, 150));
+  }
+
+  throw new Error('Firebase Auth 계정 삭제 반영을 확인하지 못했습니다.');
 };
 
 export const fetchBoardPostsFromFirebase = async () => {

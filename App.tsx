@@ -698,8 +698,7 @@ const App: React.FC = () => {
       const fallbackPassword = userAuthProofs[userId];
       if (fallbackPassword) {
         try {
-          await deleteFirebaseAccount(userId, fallbackPassword);
-          isAuthDeleted = true;
+          isAuthDeleted = await deleteFirebaseAccount(userId, fallbackPassword);
         } catch (error) {
           isAuthDeleted = false;
         }
@@ -717,15 +716,13 @@ const App: React.FC = () => {
       }
     }
 
+    if (!isAuthDeleted) {
+      alert(authDeleteData?.message || 'Firebase Auth 계정 삭제에 실패했습니다. 서비스 계정 설정 또는 대상 계정 비밀번호 증적을 확인해주세요.');
+      return;
+    }
+
     const marked = await markUserDeletedByAdminInFirebase(userId, loggedInUser.id, idToken);
     const isProfileDeleted = await deleteUserProfileFromFirebase(userId, idToken);
-
-    if (!isAuthDeleted) {
-      if (!marked && !isProfileDeleted) {
-        alert(authDeleteData?.message || '회원 삭제 처리에 실패했습니다. 잠시 후 다시 시도해주세요.');
-        return;
-      }
-    }
     setUsers(currentUsers => currentUsers.filter((u) => u.id !== userId));
 
     setUserAuthProofs(prev => {
@@ -735,16 +732,7 @@ const App: React.FC = () => {
     });
 
     if (!marked || !isProfileDeleted) {
-      alert('회원 삭제는 완료되었지만 Firebase 동기화는 일부 실패했습니다. (프로필/탈퇴마커)');
-      return;
-    }
-
-    if (!isAuthDeleted) {
-      // GitHub Pages 환경에서는 관리자 Auth 삭제 API가 없어 Auth 삭제만 실패할 수 있음.
-      // 실질 탈퇴는 프로필 삭제 + 탈퇴 마커로 유지되므로 사용자 경고는 띄우지 않음.
-      console.warn('Firebase Auth 삭제는 완료되지 않았지만, 프로필/탈퇴마커 동기화로 탈퇴 처리되었습니다.', {
-        userId,
-      });
+      alert('Firebase Auth 삭제는 완료되었지만 프로필/탈퇴마커 동기화는 일부 실패했습니다.');
     }
   };
 
