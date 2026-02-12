@@ -706,6 +706,18 @@ const App: React.FC = () => {
     }
 
     if (!isAuthDeleted) {
+      // 운영 정적 호스팅에서는 관리자 삭제 API가 없을 수 있으므로 수동 비밀번호 입력 폴백 제공
+      const manualPassword = window.prompt(`"${userId}" 계정의 비밀번호를 입력하면 Firebase Auth 삭제를 계속 진행합니다.`);
+      if (manualPassword && manualPassword.trim()) {
+        try {
+          isAuthDeleted = await deleteFirebaseAccount(userId, manualPassword.trim());
+        } catch (error) {
+          isAuthDeleted = false;
+        }
+      }
+    }
+
+    if (!isAuthDeleted) {
       try {
         const alreadyDeleted = await isDeletedFromFirebaseAuth(userId);
         if (alreadyDeleted) {
