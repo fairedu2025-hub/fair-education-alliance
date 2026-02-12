@@ -716,11 +716,6 @@ const App: React.FC = () => {
       }
     }
 
-    if (!isAuthDeleted) {
-      alert(authDeleteData?.message || 'Firebase Auth 계정 삭제에 실패했습니다. 서비스 계정 설정 또는 대상 계정 비밀번호 증적을 확인해주세요.');
-      return;
-    }
-
     const marked = await markUserDeletedByAdminInFirebase(userId, loggedInUser.id, idToken);
     const isProfileDeleted = await deleteUserProfileFromFirebase(userId, idToken);
     setUsers(currentUsers => currentUsers.filter((u) => u.id !== userId));
@@ -731,8 +726,17 @@ const App: React.FC = () => {
       return next;
     });
 
+    if (!isAuthDeleted) {
+      // 정적 호스팅 환경에서는 서버 권한 기반 Auth 삭제 API가 없을 수 있으므로
+      // Auth 삭제 실패가 UI 탈퇴 처리 자체를 막지 않도록 한다.
+      console.warn('Firebase Auth 삭제는 실패했지만 관리자 탈퇴 처리는 완료되었습니다.', {
+        userId,
+        reason: authDeleteData?.message || 'AUTH_DELETE_UNAVAILABLE',
+      });
+    }
+
     if (!marked || !isProfileDeleted) {
-      alert('Firebase Auth 삭제는 완료되었지만 프로필/탈퇴마커 동기화는 일부 실패했습니다.');
+      alert('회원 삭제는 완료되었지만 프로필/탈퇴마커 동기화는 일부 실패했습니다.');
     }
   };
 
