@@ -313,7 +313,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const syncDeletedAuthUsers = async () => {
-      if (loggedInUser?.level === '관리자') return;
+      // 비로그인/관리자 상태에서는 공개 회원 집계를 건드리지 않음
+      if (!loggedInUser || loggedInUser.level === '관리자') return;
 
       const usersWithoutProof = users
         .filter(user => user.level !== '관리자')
