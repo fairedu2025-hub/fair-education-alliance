@@ -151,7 +151,7 @@ const App: React.FC = () => {
   });
   const [firebaseSession, setFirebaseSession] = useState<{ userId: string; idToken: string } | null>(() => {
     try {
-      const stored = localStorage.getItem(FIREBASE_SESSION_KEY);
+      const stored = sessionStorage.getItem(FIREBASE_SESSION_KEY);
       if (!stored) return null;
       const parsed = JSON.parse(stored);
       if (!parsed || typeof parsed !== 'object') return null;
@@ -178,9 +178,9 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (firebaseSession) {
-      localStorage.setItem(FIREBASE_SESSION_KEY, JSON.stringify(firebaseSession));
+      sessionStorage.setItem(FIREBASE_SESSION_KEY, JSON.stringify(firebaseSession));
     } else {
-      localStorage.removeItem(FIREBASE_SESSION_KEY);
+      sessionStorage.removeItem(FIREBASE_SESSION_KEY);
     }
   }, [firebaseSession]);
 

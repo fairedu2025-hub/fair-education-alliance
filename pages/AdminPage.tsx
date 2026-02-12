@@ -317,7 +317,7 @@ const UserManagementSection: React.FC<{ users: User[], setUsers: React.Dispatch<
 
         let idToken = '';
         try {
-            const rawSession = localStorage.getItem('firebaseSession');
+            const rawSession = sessionStorage.getItem('firebaseSession');
             if (rawSession) {
                 const parsedSession = JSON.parse(rawSession);
                 idToken = typeof parsedSession?.idToken === 'string' ? parsedSession.idToken : '';
