@@ -249,6 +249,17 @@ const App: React.FC = () => {
   }, [firebaseSession, loggedInUser, users]);
 
   useEffect(() => {
+    const loadUsers = async () => {
+      const remoteUsers = await fetchUsersFromFirebase();
+      if (remoteUsers && remoteUsers.length > 0) {
+        setUsers(remoteUsers);
+      }
+    };
+
+    loadUsers();
+  }, []);
+
+  useEffect(() => {
     const loadBoardPosts = async () => {
       const remotePosts = await fetchBoardPostsFromFirebase();
       if (remotePosts) {
@@ -316,16 +327,6 @@ const App: React.FC = () => {
       // 비로그인/관리자 상태에서는 공개 회원 집계를 건드리지 않음
       if (!loggedInUser || loggedInUser.level === '관리자') return;
 
-      const usersWithoutProof = users
-        .filter(user => user.level !== '관리자')
-        .filter(user => !userAuthProofs[user.id])
-        .map(user => user.id);
-
-      if (usersWithoutProof.length > 0) {
-        const removableIds = new Set(usersWithoutProof);
-        setUsers(prev => prev.filter(user => user.level === '관리자' || !removableIds.has(user.id)));
-      }
-
       const targetUsers = users
         .filter(user => user.level !== '관리자')
         .filter(user => !!userAuthProofs[user.id]);
@@ -366,9 +367,6 @@ const App: React.FC = () => {
           invalidProofIds.forEach(id => delete next[id]);
           return next;
         });
-
-        // 검증 불가 상태가 된 계정은 화면 회원 수에서 제외
-        setUsers(prev => prev.filter(user => user.level === '관리자' || !invalidProofIds.has(user.id)));
       }
 
       if (deletedIds.size === 0) return;
